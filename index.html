@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>吉他指板 - 可交互指板图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .fretboard {
+            position: relative;
+            background: linear-gradient(to bottom, #8B4513 0%, #A0522D 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .strings {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .string {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .string-line {
+            position: absolute;
+            left: 80px;
+            right: 20px;
+            height: 2px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .string-label {
+            width: 60px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .frets {
+            display: flex;
+            margin-left: 80px;
+            gap: 0;
+        }
+
+        .fret {
+            flex: 1;
+            min-width: 60px;
+            height: 50px;
+            position: relative;
+            border-right: 3px solid #654321;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .fret:last-child {
+            border-right: none;
+        }
+
+        .fret:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .fret-number {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9em;
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .note {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .note.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .note:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .note.selected {
+            background: #FF5722;
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(255, 87, 34, 0.6);
+        }
+
+        .info-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .selected-note {
+            font-size: 1.5em;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .note-name {
+            font-weight: bold;
+            color: #FF5722;
+            font-size: 2em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .fret-markers {
+            position: absolute;
+            left: 80px;
+            right: 20px;
+            top: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .fret-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 在第3、5、7、9、12品添加标记 */
+        .fret-marker:nth-child(1) { left: calc((100% / 13) * 3 - 6px); }
+        .fret-marker:nth-child(2) { left: calc((100% / 13) * 5 - 6px); }
+        .fret-marker:nth-child(3) { left: calc((100% / 13) * 7 - 6px); }
+        .fret-marker:nth-child(4) { left: calc((100% / 13) * 9 - 6px); }
+        .fret-marker:nth-child(5) { left: calc((100% / 13) * 12 - 6px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎸 吉他指板图 (0-12品)</h1>
+        
+        <div class="fretboard">
+            <div class="fret-markers">
+                <div class="fret-marker"></div>
+                <div class="fret-marker"></div>
+                <div class="fret-marker"></div>
+                <div class="fret-marker"></div>
+                <div class="fret-marker"></div>
+            </div>
+            
+            <div class="strings" id="strings"></div>
+        </div>
+
+        <div class="info-panel">
+            <div>当前选择的音符：</div>
+            <div class="selected-note">
+                <span class="note-name" id="selectedNote">-</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="clearSelection()">清除选择</button>
+            <button onclick="showAllNotes()">显示所有音符</button>
+            <button onclick="hideAllNotes()">隐藏所有音符</button>
+        </div>
+    </div>
+
+    <script>
+        // 吉他标准调音 (从低到高)
+        const openStrings = ['E', 'A', 'D', 'G', 'B', 'E'];
+        
+        // 音符序列
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        // 当前选中的音符
+        let selectedNote = null;
+        let allNotesVisible = false;
+
+        // 获取指定弦和品的音符
+        function getNote(stringIndex, fret) {
+            const openNote = openStrings[stringIndex];
+            const openNoteIndex = notes.indexOf(openNote);
+            const noteIndex = (openNoteIndex + fret) % 12;
+            return notes[noteIndex];
+        }
+
+        // 创建指板
+        function createFretboard() {
+            const stringsContainer = document.getElementById('strings');
+            
+            openStrings.forEach((openString, stringIndex) => {
+                const stringDiv = document.createElement('div');
+                stringDiv.className = 'string';
+                
+                const stringLabel = document.createElement('div');
+                stringLabel.className = 'string-label';
+                stringLabel.textContent = openString;
+                
+                const stringLine = document.createElement('div');
+                stringLine.className = 'string-line';
+                
+                const fretsDiv = document.createElement('div');
+                fretsDiv.className = 'frets';
+                
+                // 创建0到12品
+                for (let fret = 0; fret <= 12; fret++) {
+                    const fretDiv = document.createElement('div');
+                    fretDiv.className = 'fret';
+                    fretDiv.dataset.string = stringIndex;
+                    fretDiv.dataset.fret = fret;
+                    
+                    // 添加品号（只在第一根弦显示）
+                    if (stringIndex === 0) {
+                        const fretNumber = document.createElement('div');
+                        fretNumber.className = 'fret-number';
+                        fretNumber.textContent = fret;
+                        fretDiv.appendChild(fretNumber);
+                    }
+                    
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.textContent = getNote(stringIndex, fret);
+                    note.dataset.note = getNote(stringIndex, fret);
+                    
+                    fretDiv.appendChild(note);
+                    fretsDiv.appendChild(fretDiv);
+                    
+                    // 添加点击事件
+                    fretDiv.addEventListener('click', () => {
+                        handleNoteClick(stringIndex, fret, note);
+                    });
+                }
+                
+                stringDiv.appendChild(stringLabel);
+                stringDiv.appendChild(stringLine);
+                stringDiv.appendChild(fretsDiv);
+                stringsContainer.appendChild(stringDiv);
+            });
+        }
+
+        // 处理音符点击
+        function handleNoteClick(stringIndex, fret, noteElement) {
+            const note = getNote(stringIndex, fret);
+            
+            // 清除之前的选择
+            if (selectedNote) {
+                document.querySelectorAll('.note.selected').forEach(n => {
+                    n.classList.remove('selected');
+                });
+            }
+            
+            // 切换选择状态
+            if (selectedNote === note) {
+                selectedNote = null;
+                document.getElementById('selectedNote').textContent = '-';
+            } else {
+                selectedNote = note;
+                noteElement.classList.add('selected');
+                document.getElementById('selectedNote').textContent = note;
+                
+                // 高亮所有相同音符
+                document.querySelectorAll(`.note[data-note="${note}"]`).forEach(n => {
+                    if (n !== noteElement) {
+                        n.style.background = '#FF9800';
+                        n.style.boxShadow = '0 0 15px rgba(255, 152, 0, 0.6)';
+                    }
+                });
+            }
+        }
+
+        // 清除选择
+        function clearSelection() {
+            selectedNote = null;
+            document.querySelectorAll('.note').forEach(note => {
+                note.classList.remove('selected');
+                note.style.background = '#4CAF50';
+                note.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
+            });
+            document.getElementById('selectedNote').textContent = '-';
+        }
+
+        // 显示所有音符
+        function showAllNotes() {
+            allNotesVisible = true;
+            document.querySelectorAll('.note').forEach(note => {
+                note.classList.add('active');
+            });
+        }
+
+        // 隐藏所有音符
+        function hideAllNotes() {
+            allNotesVisible = false;
+            document.querySelectorAll('.note').forEach(note => {
+                if (!note.classList.contains('selected')) {
+                    note.classList.remove('active');
+                }
+            });
+        }
+
+        // 鼠标悬停时显示音符
+        document.addEventListener('DOMContentLoaded', () => {
+            createFretboard();
+            
+            // 添加悬停效果
+            document.querySelectorAll('.fret').forEach(fret => {
+                fret.addEventListener('mouseenter', (e) => {
+                    const note = e.currentTarget.querySelector('.note');
+                    if (note && !note.classList.contains('selected')) {
+                        note.classList.add('active');
+                    }
+                });
+                
+                fret.addEventListener('mouseleave', (e) => {
+                    const note = e.currentTarget.querySelector('.note');
+                    if (note && !note.classList.contains('selected') && !allNotesVisible) {
+                        note.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
