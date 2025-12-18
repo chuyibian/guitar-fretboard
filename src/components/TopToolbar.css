@@ -1,0 +1,55 @@
+.topToolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(180deg, #1a1412 0%, #2a2220 45%, #0f0d0c 100%);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.toolbarLeft,
+.toolbarRight {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toolbarCenter {
+  display: flex;
+  gap: 0.75rem;
+  justify-self: center;
+}
+
+.iconBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: grid;
+  place-items: center;
+  color: #ddd;
+}
+
+.iconBtn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.transportBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.transportBtn.play {
+  background: linear-gradient(180deg, #3fb950 0%, #248a3d 100%);
+  border-color: #2ea043;
+}

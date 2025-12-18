@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import RulerBar from "./RulerBar";
 import "./Fretboard.css";
 
 // 简化版音名：用升号
@@ -35,16 +36,7 @@ export default function Fretboard() {
 
   return (
     <div className="fretboardWrap">
-      <div className="headerRow">
-        <div>
-          <div className="title">Guitar Fretboard</div>
-          <div className="sub">0–12 frets • click to select • markers at 3/5/7/9/12</div>
-        </div>
-        <div className="sub">
-          Tip: you can later add scale/chord highlighting here.
-        </div>
-      </div>
-
+      <RulerBar frets={12} />
       <div className="board">
         <div
           className="grid"
@@ -78,16 +70,14 @@ export default function Fretboard() {
                     onClick={() => setSel({ s, f })}
                     title={`String ${strings - s}, fret ${f}: ${note}`}
                   >
-                    {/* 品位 marker（只在第一根弦这一行画一次就够，但画在每格也 OK，我们只在最上那行画：这里用 s===0） */}
-                    {s === 0 && MARKER_FRETS.has(f) && f !== 12 && <span className="dot" />}
-                    {s === 0 && f === 12 && (
+                    {s === 2 && MARKER_FRETS.has(f) && f !== 12 && <span className="inlay" />}
+                    {s === 2 && f === 12 && (
                       <>
-                        <span className="dot double left" />
-                        <span className="dot double right" />
+                        <span className="inlay double left" />
+                        <span className="inlay double right" />
                       </>
                     )}
 
-                    {/* 选中显示音名 */}
                     {isSelected && (
                       <span className={"note " + (isSelected ? "selected" : "")}>
                         {note}
